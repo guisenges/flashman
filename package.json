@@ -66,7 +66,7 @@
     "selectize-bootstrap4-theme": "~2.0.2",
     "serve-favicon": "~2.4.2",
     "serve-static": "~1.14.1",
-    "socket.io": "~2.2.0",
+    "socket.io": "~2.4.0",
     "sweetalert2": "~7.19.3",
     "tags-input": "~1.1.1",
     "tempusdominus-bootstrap-4": "~5.1.2",

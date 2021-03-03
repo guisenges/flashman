@@ -59,7 +59,7 @@
     "pm2": "~4.4.0",
     "popper.js": "~1.15.0",
     "prompt": "~1.0.0",
-    "pug": "~2.0.4",
+    "pug": "~3.0.1",
     "request": "~2.88.0",
     "request-promise-native": "~1.0.7",
     "selectize": "~0.12.6",

@@ -488,6 +488,12 @@ acsDeviceInfoController.syncDevice = async function(req, res) {
       device.pon_txpower,
     );
   }
+  if (data.wan.name) {
+    device.wan_username = data.wan.name;
+  }
+  if (data.wan.password) {
+    device.wan_password = data.wan.password;
+  }
   if (data.common.version && data.common.version !== device.installed_release) {
     device.installed_release = data.common.version;
   }

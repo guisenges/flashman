@@ -572,6 +572,32 @@ $(document).ready(function() {
     '</a>';
   };
 
+  const buildPonSignalColumn = function(device, config, grantPonSignalSupport = false) {
+    let ponSignalStatus;
+    let ponSignalRxPower = `<span>${device.pon_rxpower}</span>`;
+    if (device.pon_rxpower === undefined) { 
+      ponSignalStatus = '<div class="badge badge-dark">Sem Sinal</div>';
+      ponSignalRxPower = '';
+    } else if (device.pon_rxpower >= config.ponSignalThresholdCriticalHigh){
+      ponSignalStatus = '<div class="badge red">Erro Sinal Alto</div>';
+    } else if (device.pon_rxpower >= config.ponSignalThreshold) {
+      ponSignalStatus = '<div class="badge green">Sinal Bom</div>';
+    } else if (device.pon_rxpower >= config.ponSignalThresholdCritical) {
+      ponSignalStatus = '<div class="badge yellow">Sinal Baixo</div>';
+    } else {
+      ponSignalStatus = '<div class="badge red">Sinal Muito Baixo</div>';
+    }
+    let ponSignalStatusColumn = (grantPonSignalSupport) ? `
+      <td>
+        <div class="text-center align-items-center">
+          ${ponSignalRxPower}<br>
+          ${ponSignalStatus} 
+        </div>
+      </td>
+    ` : '<td></td>';
+    return ponSignalStatusColumn;
+  }
+
   const buildUpgradeCol = function(device, slaves=[], isTR069=false) {
     let upgradeOpts = '';
     for (let idx = 0; idx < device.releases.length; idx++) {
@@ -716,6 +742,7 @@ $(document).ready(function() {
         (device.wan_up_time && device.status_color !== 'grey-text' ?
           secondsTimeSpanToHMS(parseInt(device.wan_up_time)) : '')+
       '</td>'+
+      '$REPLACE_PONSIGNAL'+
       '$REPLACE_UPGRADE'+
     '</tr>';
     return infoRow;
@@ -1066,7 +1093,7 @@ $(document).ready(function() {
             '</a>'+
           '</td>'+
           '$REPLACE_SEARCHSUMMARY'+
-          '<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>'+
+          '<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>'+
           '$REPLACE_ALLUPDATE'+
         '</tr>';
         if (isSuperuser || grantShowSearchSummary) {
@@ -1134,11 +1161,13 @@ $(document).ready(function() {
             isSelectableRow = false;
           }
           let upgradeCol = buildUpgradeCol(device, slaves, isTR069);
+          let ponSignalCol = buildPonSignalColumn(device, res.ponConfig, grantPonSignalSupport);
           let infoRow = buildTableRowInfo(device, isSelectableRow,
                                           false, 0, isTR069);
           infoRow = infoRow.replace('$REPLACE_ATTRIBUTES', rowAttr);
           infoRow = infoRow.replace('$REPLACE_COLOR_CLASS', statusClasses);
           infoRow = infoRow.replace('$REPLACE_COLOR_ATTR', statusAttributes);
+          infoRow = infoRow.replace('$REPLACE_PONSIGNAL', ponSignalCol);
           if (isSuperuser || grantNotificationPopups) {
             infoRow = infoRow.replace('$REPLACE_NOTIFICATIONS', notifications);
           } else {

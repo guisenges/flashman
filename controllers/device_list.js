@@ -453,6 +453,7 @@ deviceListController.complexSearchDeviceQuery = async function(queryContents,
   };
   // mapping to regular expression because one tag has a parameter inside and
   // won't make an exact match, but the other tags need to be exact.
+  let matchedConfig = await Config.findOne({is_default: true});
 
   for (let idx=0; idx < queryContents.length; idx++) {
     let tag = queryContents[idx].toLowerCase(); // assigning tag to variable.
@@ -527,7 +528,27 @@ deviceListController.complexSearchDeviceQuery = async function(queryContents,
         query.do_update = {$eq: true};
       } else if (tag.includes('off')) { // 'update off' or 'upgrade off'.
         query.do_update = {$eq: false};
+      } 
+    } else if (/^(sinal) (?:erro|bom|ruim)$/.test(tag)) { 
+      query.use_tr069 = true; // only for ONUs
+      if (tag.includes('ruim')) {
+        query.pon_rxpower = {
+          $gte: matchedConfig.tr069.pon_signal_threshold_critical,
+          $lte: matchedConfig.tr069.pon_signal_threshold,
+        };
+      } else if (tag.includes('bom')) {
+        query.pon_rxpower = {
+          $gte: matchedConfig.tr069.pon_signal_threshold,
+          $lte: matchedConfig.tr069.pon_signal_threshold_critical_high,
+        };
+      } else if (tag.includes('erro')) {
+        query.pon_rxpower = {
+          $lte: matchedConfig.tr069.pon_signal_threshold_critical,
+        };
       }
+    } else if (/^sem sinal$/.test(tag)) {
+      query.use_tr069 = true; // only for ONUs
+      query.pon_rxpower = {$exists: false}
     } else if (tag === 'flashbox') { // Anlix Flashbox routers.
       query.use_tr069 = {$ne: true};
     } else if (tag === 'tr069') { // CPE TR-069 routers.
@@ -789,6 +810,11 @@ deviceListController.searchDeviceReg = async function(req, res) {
                   devices: allDevices,
                   ssidPrefix: ssidPrefix,
                   isSsidPrefixEnabled: enabledForAllFlashman,
+                  ponConfig: {
+                    ponSignalThreshold: matchedConfig.tr069.pon_signal_threshold,
+                    ponSignalThresholdCritical: matchedConfig.tr069.pon_signal_threshold_critical,
+                    ponSignalThresholdCriticalHigh: matchedConfig.tr069.pon_signal_threshold_critical_high,
+                  },
                 });
               });
             }, (error) => {
